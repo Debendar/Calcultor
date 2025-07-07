@@ -3,96 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Calculator</title>
+  <title>Ultimate Advanced Calculator</title>
   <style>
+    :root {
+      --bg-color: #222;
+      --btn-color: #333;
+      --btn-hover: #444;
+      --equal-color: #ff5722;
+      --equal-hover: #e64a19;
+      --text-color: #fff;
+      --display-bg: #fff;
+      --display-text: #000;
+    }
+
+    body.light {
+      --bg-color: #f4f4f4;
+      --btn-color: #ddd;
+      --btn-hover: #ccc;
+      --equal-color: #2196f3;
+      --equal-hover: #1976d2;
+      --text-color: #000;
+      --display-bg: #fff;
+      --display-text: #000;
+    }
+
     body {
-      background: #f4f4f4;
+      background: var(--bg-color);
       font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       margin: 0;
+      transition: background 0.3s;
     }
 
     .calculator {
-      background: #222;
+      background: var(--bg-color);
       padding: 20px;
-      border-radius: 10px;
-      width: 250px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      border-radius: 12px;
+      width: 360px;
+      max-width: 95vw;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      transition: background 0.3s;
     }
 
     #display {
       width: 100%;
-      height: 50px;
-      font-size: 1.5em;
+      height: 80px;
+      font-size: 1.6em;
       text-align: right;
-      margin-bottom: 10px;
-      padding: 5px 10px;
+      margin-bottom: 15px;
+      padding: 10px;
       border: none;
-      border-radius: 5px;
-      background-color: white;
-      color: black;
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      background-color: var(--display-bg);
+      color: var(--display-text);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      overflow-x: auto;
+      word-wrap: break-word;
+      white-space: pre-wrap;
     }
 
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      gap: 12px;
     }
 
     .btn {
       padding: 20px;
-      font-size: 1.2em;
+      font-size: 1.3em;
       border: none;
-      border-radius: 5px;
-      background: #333;
-      color: #fff;
+      border-radius: 8px;
+      background: var(--btn-color);
+      color: var(--text-color);
       cursor: pointer;
       transition: background 0.2s;
     }
 
     .btn:hover {
-      background: #444;
+      background: var(--btn-hover);
     }
 
     .equal {
       grid-column: span 2;
-      background: #ff5722;
+      background: var(--equal-color);
     }
 
     .equal:hover {
-      background: #e64a19;
+      background: var(--equal-hover);
+    }
+
+    .theme-toggle {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .theme-toggle button {
+      padding: 8px 16px;
+      font-size: 1em;
+      border: none;
+      border-radius: 5px;
+      background: var(--btn-color);
+      color: var(--text-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .theme-toggle button:hover {
+      background: var(--btn-hover);
     }
   </style>
 </head>
 <body>
   <div class="calculator">
-    <input type="text" id="display" disabled />
-
+    <div class="theme-toggle">
+      <button onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+    <textarea id="display" disabled></textarea>
     <div class="buttons">
       <button class="btn" onclick="clearDisplay()">C</button>
+      <button class="btn" onclick="backspace()">&larr;</button>
       <button class="btn" onclick="appendValue('/')">÷</button>
       <button class="btn" onclick="appendValue('*')">×</button>
-      <button class="btn" onclick="appendValue('-')">−</button>
 
       <button class="btn" onclick="appendValue('7')">7</button>
       <button class="btn" onclick="appendValue('8')">8</button>
       <button class="btn" onclick="appendValue('9')">9</button>
-      <button class="btn" onclick="appendValue('+')">+</button>
+      <button class="btn" onclick="appendValue('-')">−</button>
 
       <button class="btn" onclick="appendValue('4')">4</button>
       <button class="btn" onclick="appendValue('5')">5</button>
       <button class="btn" onclick="appendValue('6')">6</button>
-      <button class="btn equal" onclick="calculate()">=</button>
+      <button class="btn" onclick="appendValue('+')">+</button>
 
       <button class="btn" onclick="appendValue('1')">1</button>
       <button class="btn" onclick="appendValue('2')">2</button>
       <button class="btn" onclick="appendValue('3')">3</button>
       <button class="btn" onclick="appendValue('0')">0</button>
       <button class="btn" onclick="appendValue('.')">.</button>
+      <button class="btn equal" onclick="calculate()">=</button>
     </div>
   </div>
 
@@ -100,19 +151,34 @@
     const display = document.getElementById('display');
 
     function appendValue(value) {
+      if (display.value === 'Error') display.value = '';
       display.value += value;
+      display.scrollTop = display.scrollHeight;
     }
 
     function clearDisplay() {
       display.value = '';
     }
 
+    function backspace() {
+      display.value = display.value.slice(0, -1);
+    }
+
     function calculate() {
       try {
-        display.value = eval(display.value);
+        let result = eval(display.value);
+        if (isNaN(result) || !isFinite(result)) {
+          display.value = 'Error';
+        } else {
+          display.value = result;
+        }
       } catch (e) {
         display.value = 'Error';
       }
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
     }
 
     document.addEventListener('keydown', (e) => {
@@ -121,7 +187,7 @@
       } else if (e.key === 'Enter') {
         calculate();
       } else if (e.key === 'Backspace') {
-        display.value = display.value.slice(0, -1);
+        backspace();
       } else if (e.key === 'Escape') {
         clearDisplay();
       }
