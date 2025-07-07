@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ultimate Advanced Calculator</title>
+  <title>Advanced Calculator with History</title>
   <style>
     :root {
       --bg-color: #222;
@@ -14,6 +14,7 @@
       --text-color: #fff;
       --display-bg: #fff;
       --display-text: #000;
+      --history-bg: #111;
     }
 
     body.light {
@@ -25,16 +26,17 @@
       --text-color: #000;
       --display-bg: #fff;
       --display-text: #000;
+      --history-bg: #eee;
     }
 
     body {
       background: var(--bg-color);
       font-family: Arial, sans-serif;
+      margin: 0;
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+      align-items: flex-start;
+      padding: 20px;
       transition: background 0.3s;
     }
 
@@ -42,38 +44,41 @@
       background: var(--bg-color);
       padding: 20px;
       border-radius: 12px;
-      width: 360px;
+      width: 340px;
       max-width: 95vw;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       transition: background 0.3s;
+      color: var(--text-color);
     }
 
     #display {
       width: 100%;
       height: 80px;
-      font-size: 1.6em;
+      font-size: 1.4em;
       text-align: right;
-      margin-bottom: 15px;
       padding: 10px;
       border: none;
       border-radius: 8px;
       background-color: var(--display-bg);
       color: var(--display-text);
-      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-      overflow-x: auto;
+      resize: none;
+      overflow-y: auto;
       word-wrap: break-word;
       white-space: pre-wrap;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+      margin-bottom: 15px;
     }
 
     .buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
+      margin-bottom: 15px;
     }
 
     .btn {
-      padding: 20px;
-      font-size: 1.3em;
+      padding: 18px;
+      font-size: 1.2em;
       border: none;
       border-radius: 8px;
       background: var(--btn-color);
@@ -95,12 +100,12 @@
       background: var(--equal-hover);
     }
 
-    .theme-toggle {
+    .theme-toggle, .history-header {
       text-align: center;
       margin-bottom: 10px;
     }
 
-    .theme-toggle button {
+    .theme-toggle button, .history-header button {
       padding: 8px 16px;
       font-size: 1em;
       border: none;
@@ -111,8 +116,27 @@
       transition: background 0.2s;
     }
 
-    .theme-toggle button:hover {
+    .theme-toggle button:hover, .history-header button:hover {
       background: var(--btn-hover);
+    }
+
+    .history {
+      background: var(--history-bg);
+      border-radius: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding: 10px;
+      font-size: 0.9em;
+      margin-top: 10px;
+    }
+
+    .history-item {
+      padding: 5px 0;
+      border-bottom: 1px solid var(--btn-hover);
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
     }
   </style>
 </head>
@@ -122,6 +146,7 @@
       <button onclick="toggleTheme()">Toggle Theme</button>
     </div>
     <textarea id="display" disabled></textarea>
+
     <div class="buttons">
       <button class="btn" onclick="clearDisplay()">C</button>
       <button class="btn" onclick="backspace()">&larr;</button>
@@ -145,10 +170,19 @@
       <button class="btn" onclick="appendValue('.')">.</button>
       <button class="btn equal" onclick="calculate()">=</button>
     </div>
+
+    <div class="history-header">
+      <span>History</span>
+      <button onclick="clearHistory()">Clear History</button>
+    </div>
+    <div class="history" id="history"></div>
   </div>
 
   <script>
     const display = document.getElementById('display');
+    const historyEl = document.getElementById('history');
+
+    let history = [];
 
     function appendValue(value) {
       if (display.value === 'Error') display.value = '';
@@ -170,11 +204,29 @@
         if (isNaN(result) || !isFinite(result)) {
           display.value = 'Error';
         } else {
+          const entry = `${display.value} = ${result}`;
+          history.push(entry);
+          updateHistory();
           display.value = result;
         }
       } catch (e) {
         display.value = 'Error';
       }
+    }
+
+    function updateHistory() {
+      historyEl.innerHTML = '';
+      history.slice().reverse().forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.textContent = item;
+        historyEl.appendChild(div);
+      });
+    }
+
+    function clearHistory() {
+      history = [];
+      updateHistory();
     }
 
     function toggleTheme() {
@@ -185,6 +237,7 @@
       if ((e.key >= '0' && e.key <= '9') || '+-*/.'.includes(e.key)) {
         appendValue(e.key);
       } else if (e.key === 'Enter') {
+        e.preventDefault();
         calculate();
       } else if (e.key === 'Backspace') {
         backspace();
